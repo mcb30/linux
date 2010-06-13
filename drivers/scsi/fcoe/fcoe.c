@@ -2150,21 +2150,22 @@ int fcoe_link_ok(struct fc_lport *lport)
 	struct net_device *netdev = port->fcoe->netdev;
 	struct ethtool_cmd ecmd = { ETHTOOL_GSET };
 
-	if ((netdev->flags & IFF_UP) && netif_carrier_ok(netdev) &&
-	    (!dev_ethtool_get_settings(netdev, &ecmd))) {
-		lport->link_supported_speeds &=
-			~(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
-		if (ecmd.supported & (SUPPORTED_1000baseT_Half |
-				      SUPPORTED_1000baseT_Full))
-			lport->link_supported_speeds |= FC_PORTSPEED_1GBIT;
-		if (ecmd.supported & SUPPORTED_10000baseT_Full)
-			lport->link_supported_speeds |=
-				FC_PORTSPEED_10GBIT;
-		if (ecmd.speed == SPEED_1000)
-			lport->link_speed = FC_PORTSPEED_1GBIT;
-		if (ecmd.speed == SPEED_10000)
-			lport->link_speed = FC_PORTSPEED_10GBIT;
-
+	if ((netdev->flags & IFF_UP) && netif_carrier_ok(netdev)) {
+		if (!dev_ethtool_get_settings(netdev, &ecmd)) {
+			lport->link_supported_speeds &=
+				~(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
+			if (ecmd.supported & (SUPPORTED_1000baseT_Half |
+					      SUPPORTED_1000baseT_Full))
+				lport->link_supported_speeds |=
+					FC_PORTSPEED_1GBIT;
+			if (ecmd.supported & SUPPORTED_10000baseT_Full)
+				lport->link_supported_speeds |=
+					FC_PORTSPEED_10GBIT;
+			if (ecmd.speed == SPEED_1000)
+				lport->link_speed = FC_PORTSPEED_1GBIT;
+			if (ecmd.speed == SPEED_10000)
+				lport->link_speed = FC_PORTSPEED_10GBIT;
+		}
 		return 0;
 	}
 	return -1;
