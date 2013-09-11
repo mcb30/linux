@@ -528,6 +528,16 @@ config SRAM
 	  the genalloc API. It is supposed to be used for small on-chip SRAM
 	  areas found on many SoCs.
 
+config PULSEBLASTER
+	tristate "SpinCore PulseBlaster driver"
+	depends on PCI && SYSFS
+	help
+	  This option enables device driver support for the SpinCore
+	  PulseBlaster programmable TTL pulse generator.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called pulseblaster.
+
 source "drivers/misc/c2port/Kconfig"
 source "drivers/misc/eeprom/Kconfig"
 source "drivers/misc/cb710/Kconfig"
