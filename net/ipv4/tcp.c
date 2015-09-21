@@ -1036,7 +1036,13 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	bool sg;
 	long timeo;
 
+	//
+	msg->tsc[1] = current_tsc();
+
 	lock_sock(sk);
+
+	//
+	msg->tsc[2] = current_tsc();
 
 	flags = msg->msg_flags;
 	if (flags & MSG_FASTOPEN) {
@@ -1237,6 +1243,10 @@ out:
 	if (copied)
 		tcp_push(sk, flags, mss_now, tp->nonagle);
 	release_sock(sk);
+
+	//
+	msg->tsc[3] = current_tsc();
+
 	return copied + copied_syn;
 
 do_fault:
