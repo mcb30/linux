@@ -1779,9 +1779,6 @@ SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len,
 	struct iovec iov;
 	int fput_needed;
 
-	//
-	msg.tsc[0] = current_tsc();
-
 	if (len > INT_MAX)
 		len = INT_MAX;
 	sock = sockfd_lookup_light(fd, &err, &fput_needed);
@@ -1811,18 +1808,6 @@ SYSCALL_DEFINE6(sendto, int, fd, void __user *, buff, size_t, len,
 out_put:
 	fput_light(sock->file, fput_needed);
 out:
-
-	//
-	msg.tsc[4] = current_tsc();
-
-	if ( sock->sk->__sk_common.skc_dport == htons ( 21024 ) ) {
-	  printk ( KERN_INFO "sendto %5ld tcp_sendmsg %5ld lock_sock %5ld unlock_sock %5ld return\n",
-		   ( ( unsigned long ) ( msg.tsc[1] - msg.tsc[0] ) ),
-		   ( ( unsigned long ) ( msg.tsc[2] - msg.tsc[1] ) ),
-		   ( ( unsigned long ) ( msg.tsc[3] - msg.tsc[2] ) ),
-		   ( ( unsigned long ) ( msg.tsc[4] - msg.tsc[3] ) ) );
-	}
-
 	return err;
 }
 

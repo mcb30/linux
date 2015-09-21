@@ -2772,6 +2772,9 @@ int dev_queue_xmit(struct sk_buff *skb)
 	struct Qdisc *q;
 	int rc = -ENOMEM;
 
+	//
+	SK_TSC ( skb->sk->tsc.tsc, dev_queue_xmit );
+
 	skb_reset_mac_header(skb);
 
 	/* Disable soft irqs for various locks below. Also

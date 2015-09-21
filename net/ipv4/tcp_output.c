@@ -1820,6 +1820,9 @@ static bool tcp_write_xmit(struct sock *sk, unsigned int mss_now, int nonagle,
 	int cwnd_quota;
 	int result;
 
+	//
+	SK_TSC ( sk->tsc.tsc, tcp_write_xmit );
+
 	sent_pkts = 0;
 
 	if (!push_one) {

@@ -52,21 +52,7 @@ struct msghdr {
 	void 	*	msg_control;	/* Per protocol magic (eg BSD file descriptor passing) */
 	__kernel_size_t	msg_controllen;	/* Length of cmsg list */
 	unsigned int	msg_flags;
-
-	//
-	uint64_t tsc[16];
 };
-
-//
-static inline uint64_t current_tsc ( void ) {
-	uint32_t eax;
-	uint32_t edx;
-	uint32_t ecx;
-
-	__asm__ __volatile__ ( "rdtscp"
-			       : "=a" ( eax ), "=d" ( edx ), "=c" ( ecx ) );
-	return ( ( ( ( uint64_t ) edx ) << 32 ) | eax );
-}
 
 /* For recvmmsg/sendmmsg */
 struct mmsghdr {

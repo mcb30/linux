@@ -1035,14 +1035,17 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	int mss_now = 0, size_goal, copied_syn = 0, offset = 0;
 	bool sg;
 	long timeo;
+	struct sock_tsc tsc;
 
 	//
-	msg->tsc[1] = current_tsc();
+	memset ( &tsc, 0, sizeof ( tsc ) );
+	tsc.ref = sk_tsc_now();
 
 	lock_sock(sk);
 
 	//
-	msg->tsc[2] = current_tsc();
+	memcpy ( &sk->tsc.tsc, &tsc, sizeof ( sk->tsc.tsc ) );
+	SK_TSC ( sk->tsc.tsc, tcp_sendmsg_lock_sock );
 
 	flags = msg->msg_flags;
 	if (flags & MSG_FASTOPEN) {
@@ -1242,10 +1245,26 @@ wait_for_memory:
 out:
 	if (copied)
 		tcp_push(sk, flags, mss_now, tp->nonagle);
+
+	//
+	SK_TSC ( sk->tsc.tsc, tcp_sendmsg_out );
+	memcpy ( &tsc, &sk->tsc.tsc, sizeof ( tsc ) );
+
 	release_sock(sk);
 
 	//
-	msg->tsc[3] = current_tsc();
+	SK_TSC ( tsc, tcp_sendmsg_release_sock );
+
+	if ( sk->__sk_common.skc_dport == htons ( 21024 ) ) {
+		printk ( KERN_INFO "tcp_sendmsg %5d lock %5d tcp %5d ip "
+			 "%5d dev %5d out %5d release\n",
+			 tsc.tcp_sendmsg_lock_sock,
+			 tsc.tcp_write_xmit,
+			 tsc.ip_queue_xmit,
+			 tsc.dev_queue_xmit,
+			 tsc.tcp_sendmsg_out,
+			 tsc.tcp_sendmsg_release_sock );
+	}
 
 	return copied + copied_syn;
 
