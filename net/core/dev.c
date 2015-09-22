@@ -2773,7 +2773,8 @@ int dev_queue_xmit(struct sk_buff *skb)
 	int rc = -ENOMEM;
 
 	//
-	SK_TSC ( skb->sk->tsc.tsc, dev_queue_xmit );
+	if ( skb->sk )
+		SK_TSC ( skb->sk->tsc.tsc, dev_queue_xmit );
 
 	skb_reset_mac_header(skb);
 
