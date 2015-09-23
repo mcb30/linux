@@ -217,43 +217,6 @@ struct sock_common {
 	/* public: */
 };
 
-//
-struct sock_tsc {
-	uint64_t ref;
-	uint32_t tcp_sendmsg_lock_sock;
-	uint32_t tcp_write_xmit;
-	uint32_t ip_queue_xmit;
-	uint32_t dev_queue_xmit;
-	uint32_t tcp_sendmsg_out;
-	uint32_t tcp_sendmsg_release_sock;
-};
-
-//
-static inline uint64_t sk_tsc_now ( void ) {
-	uint32_t eax;
-	uint32_t edx;
-	uint32_t ecx;
-
-	__asm__ __volatile__ ( "rdtscp"
-			       : "=a" ( eax ), "=d" ( edx ), "=c" ( ecx ) );
-	return ( ( ( ( uint64_t ) edx ) << 32 ) | eax );
-}
-
-//
-static inline uint32_t sk_tsc_delta ( struct sock_tsc *tsc ) {
-	uint64_t now = sk_tsc_now();
-	uint32_t delta = ( now - tsc->ref );
-	tsc->ref = now;
-	return delta;
-}
-
-//
-#define SK_TSC( sk, field ) do {					\
-		if ( (sk)->sk_dport == htons ( 21024 ) )		\
-			(sk)->tsc.tsc.field =				\
-				sk_tsc_delta ( &(sk)->tsc.tsc );	\
-	} while ( 1 )
-
 struct cg_proto;
 /**
   *	struct sock - network layer representation of sockets
@@ -474,10 +437,6 @@ struct sock {
 	 * to replace reserved slots with required structure field
 	 * additions of your backport.
 	 */
-	//
-	union {
-		struct sock_tsc tsc;
-		struct {
 	RH_KABI_RESERVE_P(1)
 	RH_KABI_RESERVE_P(2)
 	RH_KABI_RESERVE_P(3)
@@ -486,8 +445,6 @@ struct sock {
 	RH_KABI_RESERVE_P(6)
 	RH_KABI_RESERVE_P(7)
 	RH_KABI_RESERVE_P(8)
-		} rh_reserved;
-	} tsc;
 };
 
 #define __sk_user_data(sk) ((*((void __rcu **)&(sk)->sk_user_data)))

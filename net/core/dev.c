@@ -131,6 +131,9 @@
 #include <linux/static_key.h>
 #include <linux/hashtable.h>
 
+//
+#include <net/socktsc.h>
+
 #include "net-sysfs.h"
 
 /* Instead of increasing this, you should create a hash table. */

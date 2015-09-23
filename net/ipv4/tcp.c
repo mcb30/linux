@@ -280,6 +280,9 @@
 #include <asm/ioctls.h>
 #include <net/busy_poll.h>
 
+//
+#include <net/socktsc.h>
+
 int sysctl_tcp_fin_timeout __read_mostly = TCP_FIN_TIMEOUT;
 
 int sysctl_tcp_min_tso_segs __read_mostly = 2;
@@ -1038,13 +1041,13 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	struct sock_tsc tsc;
 
 	//
+	memset ( &tsc, 0, sizeof ( tsc ) );
 	tsc.ref = sk_tsc_now();
 
 	lock_sock(sk);
 
 	//
-	memset ( &sk->tsc, 0, sizeof ( sk->tsc ) );
-	sk->tsc.tsc.ref = tsc.ref;
+	memcpy ( sk_tsc ( sk ), &tsc, sizeof ( tsc ) );
 	SK_TSC ( sk, tcp_sendmsg_lock_sock );
 
 	flags = msg->msg_flags;
@@ -1248,7 +1251,7 @@ out:
 
 	//
 	SK_TSC ( sk, tcp_sendmsg_out );
-	memcpy ( &tsc, &sk->tsc.tsc, sizeof ( tsc ) );
+	memcpy ( &tsc, sk_tsc ( sk ), sizeof ( tsc ) );
 
 	release_sock(sk);
 
