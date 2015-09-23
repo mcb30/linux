@@ -1038,14 +1038,14 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	struct sock_tsc tsc;
 
 	//
-	memset ( &tsc, 0, sizeof ( tsc ) );
 	tsc.ref = sk_tsc_now();
 
 	lock_sock(sk);
 
 	//
-	memcpy ( &sk->tsc.tsc, &tsc, sizeof ( sk->tsc.tsc ) );
-	SK_TSC ( sk->tsc.tsc, tcp_sendmsg_lock_sock );
+	memset ( &sk->tsc, 0, sizeof ( sk->tsc ) );
+	sk->tsc.tsc.ref = tsc.ref;
+	SK_TSC ( sk, tcp_sendmsg_lock_sock );
 
 	flags = msg->msg_flags;
 	if (flags & MSG_FASTOPEN) {
@@ -1247,13 +1247,13 @@ out:
 		tcp_push(sk, flags, mss_now, tp->nonagle);
 
 	//
-	SK_TSC ( sk->tsc.tsc, tcp_sendmsg_out );
+	SK_TSC ( sk, tcp_sendmsg_out );
 	memcpy ( &tsc, &sk->tsc.tsc, sizeof ( tsc ) );
 
 	release_sock(sk);
 
 	//
-	SK_TSC ( tsc, tcp_sendmsg_release_sock );
+	tsc.tcp_sendmsg_release_sock = sk_tsc_delta ( &tsc );
 
 	if ( sk->__sk_common.skc_dport == htons ( 21024 ) ) {
 		printk ( KERN_INFO "tcp_sendmsg %5d lock %5d tcp %5d ip "

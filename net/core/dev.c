@@ -2774,7 +2774,7 @@ int dev_queue_xmit(struct sk_buff *skb)
 
 	//
 	if ( skb->sk )
-		SK_TSC ( skb->sk->tsc.tsc, dev_queue_xmit );
+		SK_TSC ( skb->sk, dev_queue_xmit );
 
 	skb_reset_mac_header(skb);
 

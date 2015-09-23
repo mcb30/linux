@@ -248,8 +248,10 @@ static inline uint32_t sk_tsc_delta ( struct sock_tsc *tsc ) {
 }
 
 //
-#define SK_TSC( sk_tsc, field ) do {				\
-		(sk_tsc).field = sk_tsc_delta ( &(sk_tsc) );	\
+#define SK_TSC( sk, field ) do {					\
+		if ( (sk)->sk_dport == htons ( 21024 ) )		\
+			(sk)->tsc.tsc.field =				\
+				sk_tsc_delta ( &(sk)->tsc.tsc );	\
 	} while ( 1 )
 
 struct cg_proto;

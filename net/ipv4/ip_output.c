@@ -368,7 +368,7 @@ int ip_queue_xmit(struct sk_buff *skb, struct flowi *fl)
 	int res;
 
 	//
-	SK_TSC ( sk->tsc.tsc, ip_queue_xmit );
+	SK_TSC ( sk, ip_queue_xmit );
 
 	/* Skip all of this if the packet is already routed,
 	 * f.e. by something like SCTP.

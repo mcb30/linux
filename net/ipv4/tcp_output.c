@@ -1821,7 +1821,7 @@ static bool tcp_write_xmit(struct sock *sk, unsigned int mss_now, int nonagle,
 	int result;
 
 	//
-	SK_TSC ( sk->tsc.tsc, tcp_write_xmit );
+	SK_TSC ( sk, tcp_write_xmit );
 
 	sent_pkts = 0;
 
