@@ -1857,6 +1857,10 @@ static void __lock_sock(struct sock *sk)
 {
 	DEFINE_WAIT(wait);
 
+	//
+	if ( sk->__sk_common.skc_dport == htons ( 21024 ) )
+		printk ( KERN_INFO "lock_sock() lock was contended\n" );
+
 	for (;;) {
 		prepare_to_wait_exclusive(&sk->sk_lock.wq, &wait,
 					TASK_UNINTERRUPTIBLE);

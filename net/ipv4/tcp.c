@@ -1039,8 +1039,11 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	bool sg;
 	long timeo;
 	struct sock_tsc tsc;
+	unsigned int start_cpu_id;
+	unsigned int end_cpu_id;
 
 	//
+	start_cpu_id = smp_processor_id();
 	memset ( &tsc, 0, sizeof ( tsc ) );
 	tsc.ref = sk_tsc_now();
 
@@ -1257,10 +1260,12 @@ out:
 
 	//
 	tsc.tcp_sendmsg_release_sock = sk_tsc_delta ( &tsc );
+	end_cpu_id = smp_processor_id();
 
 	if ( sk->__sk_common.skc_dport == htons ( 21024 ) ) {
-		printk ( KERN_INFO "tcp_sendmsg %5d lock %5d tcp %5d ip "
-			 "%5d dev %5d out %5d release\n",
+		printk ( KERN_INFO "CPU %d-%d tcp_sendmsg %5d lock %5d tcp %5d "
+			 "ip %5d dev %5d out %5d release\n",
+			 start_cpu_id, end_cpu_id,
 			 tsc.tcp_sendmsg_lock_sock,
 			 tsc.tcp_write_xmit,
 			 tsc.ip_queue_xmit,
