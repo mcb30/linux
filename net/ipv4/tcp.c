@@ -1033,6 +1033,7 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 {
 	struct iovec *iov;
 	struct tcp_sock *tp = tcp_sk(sk);
+	struct inet_sock *inet = inet_sk(sk);
 	struct sk_buff *skb;
 	int iovlen, flags, err, copied = 0;
 	int mss_now = 0, size_goal, copied_syn = 0, offset = 0;
@@ -1263,9 +1264,10 @@ out:
 	end_cpu_id = smp_processor_id();
 
 	if ( sk->__sk_common.skc_dport == htons ( 21024 ) ) {
-		printk ( KERN_INFO "CPU %d-%d tcp_sendmsg %5d lock %5d tcp %5d "
-			 "ip %5d dev %5d out %5d release\n",
+		printk ( KERN_INFO "CPU %d-%d sport %d len %zd tcp_sendmsg %5d "
+			 "lock %5d tcp %5d ip %5d dev %5d out %5d release\n",
 			 start_cpu_id, end_cpu_id,
+			 ntohs ( inet->inet_sport ), size,
 			 tsc.tcp_sendmsg_lock_sock,
 			 tsc.tcp_write_xmit,
 			 tsc.ip_queue_xmit,
