@@ -1040,10 +1040,12 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	bool sg;
 	long timeo;
 	struct sock_tsc tsc;
+	ktime_t ktime;
 	unsigned int start_cpu_id;
 	unsigned int end_cpu_id;
 
 	//
+	ktime = ktime_get_real();
 	start_cpu_id = smp_processor_id();
 	memset ( &tsc, 0, sizeof ( tsc ) );
 	tsc.ref = sk_tsc_now();
@@ -1264,14 +1266,28 @@ out:
 	end_cpu_id = smp_processor_id();
 
 	if ( sk->__sk_common.skc_dport == htons ( 21024 ) ) {
+		char packet[132];
+		char *base36;
+
+		// and I thought this hack couldn't get any uglier...
+		if ( ( size == 132 ) &&
+		     ( copy_from_user ( packet, msg->msg_iov->iov_base,
+					132 ) == 0 ) ) {
+			base36 = &packet[0x5c];
+		} else {
+			base36 = "";
+		}
+
 		printk ( KERN_INFO "CPU %d-%d sport %d len %zd txq %p%s%s "
+			 "ktime %lld base36 \"%s\" "
 			 "tcp_sendmsg %5d lock %5d tcp %5d ip %5d dev %5d "
 			 "skb %5d done %5d out %5d release\n",
 			 start_cpu_id, end_cpu_id,
 			 ntohs ( inet->inet_sport ), size,
 			 tsc.txq,
-			 ( ( tsc.flags & SKTSC_BYPASS ) ? "bypass" : "" ),
-			 ( ( tsc.flags & SKTSC_ENQUEUE ) ? "enqueue" : "" ),
+			 ( ( tsc.flags & SKTSC_BYPASS ) ? " bypass" : "" ),
+			 ( ( tsc.flags & SKTSC_ENQUEUE ) ? " enqueue" : "" ),
+			 ( unsigned long long ) ktime.tv64, base36,
 			 tsc.tcp_sendmsg_lock_sock,
 			 tsc.tcp_write_xmit,
 			 tsc.ip_queue_xmit,
