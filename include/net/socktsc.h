@@ -8,9 +8,16 @@ struct sock_tsc {
 	uint32_t tcp_write_xmit;
 	uint32_t ip_queue_xmit;
 	uint32_t dev_queue_xmit;
+	uint32_t dev_xmit_skb;
+	uint32_t dev_xmit_skb_done;
 	uint32_t tcp_sendmsg_out;
 	uint32_t tcp_sendmsg_release_sock;
+	unsigned int flags;
+	struct netdev_queue *txq;
 };
+
+#define SKTSC_BYPASS 0x0001
+#define SKTSC_ENQUEUE 0x0002
 
 //
 static inline uint64_t sk_tsc_now ( void ) {

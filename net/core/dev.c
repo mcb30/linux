@@ -2675,6 +2675,13 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
 		 * waiting to be sent out; and the qdisc is not running -
 		 * xmit the skb directly.
 		 */
+
+		//
+		if ( skb->sk ) {
+			struct sock_tsc *tsc = sk_tsc ( skb->sk );
+			tsc->flags |= SKTSC_BYPASS;
+		}
+
 		if (!(dev->priv_flags & IFF_XMIT_DST_RELEASE))
 			skb_dst_force(skb);
 
@@ -2691,6 +2698,13 @@ static inline int __dev_xmit_skb(struct sk_buff *skb, struct Qdisc *q,
 
 		rc = NET_XMIT_SUCCESS;
 	} else {
+
+		//
+		if ( skb->sk ) {
+			struct sock_tsc *tsc = sk_tsc ( skb->sk );
+			tsc->flags |= SKTSC_ENQUEUE;
+		}
+
 		skb_dst_force(skb);
 		rc = q->enqueue(skb, q) & NET_XMIT_MASK;
 		if (qdisc_run_begin(q)) {
@@ -2796,7 +2810,20 @@ int dev_queue_xmit(struct sk_buff *skb)
 #endif
 	trace_net_dev_queue(skb);
 	if (q->enqueue) {
+
+		//
+		if ( skb->sk ) {
+			struct sock_tsc *tsc = sk_tsc ( skb->sk );
+			tsc->txq = txq;
+			SK_TSC ( skb->sk, dev_xmit_skb );
+		}
+
 		rc = __dev_xmit_skb(skb, q, dev, txq);
+
+		//
+		if ( skb->sk )
+			SK_TSC ( skb->sk, dev_xmit_skb_done );
+
 		goto out;
 	}
 

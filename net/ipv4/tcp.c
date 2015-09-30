@@ -1264,14 +1264,20 @@ out:
 	end_cpu_id = smp_processor_id();
 
 	if ( sk->__sk_common.skc_dport == htons ( 21024 ) ) {
-		printk ( KERN_INFO "CPU %d-%d sport %d len %zd tcp_sendmsg %5d "
-			 "lock %5d tcp %5d ip %5d dev %5d out %5d release\n",
+		printk ( KERN_INFO "CPU %d-%d sport %d len %zd txq %p%s%s "
+			 "tcp_sendmsg %5d lock %5d tcp %5d ip %5d dev %5d "
+			 "skb %5d done %5d out %5d release\n",
 			 start_cpu_id, end_cpu_id,
 			 ntohs ( inet->inet_sport ), size,
+			 tsc.txq,
+			 ( ( tsc.flags & SKTSC_BYPASS ) ? "bypass" : "" ),
+			 ( ( tsc.flags & SKTSC_ENQUEUE ) ? "enqueue" : "" ),
 			 tsc.tcp_sendmsg_lock_sock,
 			 tsc.tcp_write_xmit,
 			 tsc.ip_queue_xmit,
 			 tsc.dev_queue_xmit,
+			 tsc.dev_xmit_skb,
+			 tsc.dev_xmit_skb_done,
 			 tsc.tcp_sendmsg_out,
 			 tsc.tcp_sendmsg_release_sock );
 	}
