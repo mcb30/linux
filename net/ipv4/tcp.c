@@ -1041,14 +1041,16 @@ int tcp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	long timeo;
 	struct sock_tsc tsc;
 	ktime_t ktime;
+	uint64_t ref;
 	unsigned int start_cpu_id;
 	unsigned int end_cpu_id;
 
 	//
 	ktime = ktime_get_real();
+	ref = sk_tsc_now();
 	start_cpu_id = smp_processor_id();
 	memset ( &tsc, 0, sizeof ( tsc ) );
-	tsc.ref = sk_tsc_now();
+	tsc.ref = ref;
 
 	lock_sock(sk);
 
@@ -1279,7 +1281,7 @@ out:
 		}
 
 		printk ( KERN_INFO "CPU %d-%d sport %d len %zd txq %p%s%s "
-			 "ktime %lld base36 \"%s\" "
+			 "ktime %lld tsc %lld base36 \"%s\" "
 			 "tcp_sendmsg %5d lock %5d tcp %5d ip %5d dev %5d "
 			 "skb %5d done %5d out %5d release\n",
 			 start_cpu_id, end_cpu_id,
@@ -1287,7 +1289,8 @@ out:
 			 tsc.txq,
 			 ( ( tsc.flags & SKTSC_BYPASS ) ? " bypass" : "" ),
 			 ( ( tsc.flags & SKTSC_ENQUEUE ) ? " enqueue" : "" ),
-			 ( unsigned long long ) ktime.tv64, base36,
+			 ( unsigned long long ) ktime.tv64,
+			 ( unsigned long long ) ref, base36,
 			 tsc.tcp_sendmsg_lock_sock,
 			 tsc.tcp_write_xmit,
 			 tsc.ip_queue_xmit,
