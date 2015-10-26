@@ -74,6 +74,14 @@
 #define INCVALUE_82576			(16 << IGB_82576_TSYNC_SHIFT)
 #define IGB_NBITS_82580			40
 
+static int pin_extts = -1;
+module_param(pin_extts, int, 0);
+MODULE_PARM_DESC(pin_extts, "Fixed EXTTS pin");
+
+static int pin_perout = -1;
+module_param(pin_perout, int, 0);
+MODULE_PARM_DESC(pin_perout, "Fixed PEROUT pin");
+
 static void igb_ptp_tx_hwtstamp(struct igb_adapter *adapter);
 
 /* SYSTIM read access for the 82576 */
@@ -479,8 +487,7 @@ static int igb_ptp_feature_enable_i210(struct ptp_clock_info *ptp,
 	switch (rq->type) {
 	case PTP_CLK_REQ_EXTTS:
 		if (on) {
-			pin = ptp_find_pin(igb->ptp_clock, PTP_PF_EXTTS,
-					   rq->extts.index);
+			pin = pin_extts;
 			if (pin < 0)
 				return -EBUSY;
 		}
@@ -509,8 +516,7 @@ static int igb_ptp_feature_enable_i210(struct ptp_clock_info *ptp,
 
 	case PTP_CLK_REQ_PEROUT:
 		if (on) {
-			pin = ptp_find_pin(igb->ptp_clock, PTP_PF_PEROUT,
-					   rq->perout.index);
+			pin = pin_perout;
 			if (pin < 0)
 				return -EBUSY;
 		}
@@ -577,20 +583,6 @@ static int igb_ptp_feature_enable(struct ptp_clock_info *ptp,
 				  struct ptp_clock_request *rq, int on)
 {
 	return -EOPNOTSUPP;
-}
-
-static int igb_ptp_verify_pin(struct ptp_clock_info *ptp, unsigned int pin,
-			      enum ptp_pin_function func, unsigned int chan)
-{
-	switch (func) {
-	case PTP_PF_NONE:
-	case PTP_PF_EXTTS:
-	case PTP_PF_PEROUT:
-		break;
-	case PTP_PF_PHYSYNC:
-		return -1;
-	}
-	return 0;
 }
 
 /**
@@ -983,7 +975,6 @@ void igb_ptp_init(struct igb_adapter *adapter)
 {
 	struct e1000_hw *hw = &adapter->hw;
 	struct net_device *netdev = adapter->netdev;
-	int i;
 
 	switch (hw->mac.type) {
 	case e1000_82576:
@@ -1026,27 +1017,17 @@ void igb_ptp_init(struct igb_adapter *adapter)
 		break;
 	case e1000_i210:
 	case e1000_i211:
-		for (i = 0; i < IGB_N_SDP; i++) {
-			struct ptp_pin_desc *ppd = &adapter->sdp_config[i];
-
-			snprintf(ppd->name, sizeof(ppd->name), "SDP%d", i);
-			ppd->index = i;
-			ppd->func = PTP_PF_NONE;
-		}
 		snprintf(adapter->ptp_caps.name, 16, "%pm", netdev->dev_addr);
 		adapter->ptp_caps.owner = THIS_MODULE;
 		adapter->ptp_caps.max_adj = 62499999;
 		adapter->ptp_caps.n_ext_ts = IGB_N_EXTTS;
 		adapter->ptp_caps.n_per_out = IGB_N_PEROUT;
-		adapter->ptp_caps.n_pins = IGB_N_SDP;
 		adapter->ptp_caps.pps = 1;
-		adapter->ptp_caps.pin_config = adapter->sdp_config;
 		adapter->ptp_caps.adjfreq = igb_ptp_adjfreq_82580;
 		adapter->ptp_caps.adjtime = igb_ptp_adjtime_i210;
 		adapter->ptp_caps.gettime = igb_ptp_gettime_i210;
 		adapter->ptp_caps.settime = igb_ptp_settime_i210;
 		adapter->ptp_caps.enable = igb_ptp_feature_enable_i210;
-		adapter->ptp_caps.verify = igb_ptp_verify_pin;
 		/* Enable the timer functions by clearing bit 31. */
 		wr32(E1000_TSAUXC, 0x0);
 		break;
